@@ -1,235 +1,455 @@
 <!DOCTYPE html>
-<html lang="lv">
+<html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Обучение: Биологическое сельское хозяйство в Латвии</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Новус - Полный симулятор рикошетов</title>
     <style>
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             margin: 0;
-            padding: 0;
-            background-color: #f4f7f6;
-            color: #333;
+            padding: 15px;
+            background-color: #2c3e50;
+            color: #ecf0f1;
+            font-family: sans-serif;
             display: flex;
             flex-direction: column;
             align-items: center;
         }
-
-        /* Fixed Video Header */
-        .video-container {
-            position: fixed;
-            top: 0;
+        h1 { margin-bottom: 5px; font-size: 22px; }
+        p { margin: 5px 0 15px 0; color: #bdc3c7; text-align: center; max-width: 500px; font-size: 14px; }
+        
+        #canvasContainer {
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            border-radius: 4px;
+            overflow: hidden;
+            margin-bottom: 15px;
+            /* Адаптивность для телефона */
             width: 100%;
-            background: #000;
-            z-index: 1000;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+            max-width: 600px;
+        }
+        canvas {
+            background-color: #f3d9b1;
+            display: block;
+            cursor: crosshair;
+            width: 100%; /* Растягивает канвас по ширине контейнера */
+            height: auto; /* Сохраняет пропорции */
+        }
+        
+        .circle-panel-container {
             display: flex;
-            justify-content: center;
-        }
-
-        .video-wrapper {
-            width: 100%;
-            max-width: 800px;
-            aspect-ratio: 16 / 9;
-        }
-
-        iframe {
-            width: 100%;
-            height: 100%;
-            border: none;
-        }
-
-        /* Scrollable Content */
-        .content {
-            margin-top: 480px; /* Adjust based on video height */
-            width: 95%;
-            max-width: 1000px;
-            padding-bottom: 50px;
-        }
-
-        /* Table Styles */
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            table-layout: fixed;
-            background: white;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-        }
-
-        th, td {
-            border: 1px solid #ddd;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+            background: #34495e;
             padding: 15px;
-            text-align: left;
-            vertical-align: top;
-            word-wrap: break-word;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
         }
-
-        th {
-            background-color: #2c3e50;
-            color: white;
+        .panel-title {
+            font-size: 12px;
+            font-weight: bold;
+            color: #bdc3c7;
             text-transform: uppercase;
-            font-size: 0.9em;
             letter-spacing: 1px;
         }
-
-        .latvian {
-            font-weight: 600;
-            font-size: 1.1em;
-            color: #1a1a1a;
-            width: 50%;
+        .circle-interface {
+            position: relative;
+            width: 120px;
+            height: 120px;
+            border: 2px solid #ecf0f1;
+            border-radius: 50%;
+            background-color: #2c3e50;
         }
-
-        .russian {
-            color: #444;
-            width: 50%;
+        .circle-interface::before {
+            content: ''; position: absolute; top: 0; left: 59px; width: 2px; height: 100%; background: rgba(236, 240, 241, 0.2);
         }
-
-        tr:nth-child(even) {
-            background-color: #f9f9f9;
+        .circle-interface::after {
+            content: ''; position: absolute; top: 59px; left: 0; width: 100%; height: 2px; background: rgba(236, 240, 241, 0.2);
         }
-
-        tr:hover {
-            background-color: #f1f1f1;
+        .dot-btn {
+            position: absolute;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background-color: #e74c3c;
+            border: 2px solid #fff;
+            cursor: pointer;
+            transform: translate(-50%, -50%);
+            transition: all 0.2s ease;
+            z-index: 10;
         }
-
-        /* Tablet & Mobile Optimization */
-        @media (max-width: 850px) {
-            .content {
-                margin-top: 350px;
-                width: 100%;
-            }
-            .latvian, .russian {
-                padding: 10px;
-            }
+        .dot-btn:hover {
+            background-color: #2ecc71;
+            transform: translate(-50%, -50%) scale(1.2);
         }
-
-        @media (max-width: 480px) {
-            .content {
-                margin-top: 250px;
-            }
+        .dot-btn:active {
+            transform: translate(-50%, -50%) scale(0.9);
         }
+        .dot-center  { top: 50%; left: 50%; background-color: #ecf0f1; }
+        .dot-top     { top: 12%; left: 50%; }
+        .dot-bottom  { top: 88%; left: 50%; }
+        .dot-left    { top: 50%; left: 12%; }
+        .dot-right   { top: 50%; left: 88%; }
+
+        .btn-board {
+            margin-top: 5px;
+            background-color: #e74c3c;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .btn-board:hover { background-color: #c0392b; }
     </style>
 </head>
 <body>
 
-<div class="video-container">
-    <div class="video-wrapper">
-        <iframe src="https://www.youtube.com/embed/vIx8MIe_Qcs" 
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
-                allowfullscreen>
-        </iframe>
+    <h1>Новус: Симулятор рикошетов</h1>
+    <p>Красный пунктир — движение биты. Зеленая линия — честная физическая траектория шашки с отскоками от бортов.</p>
+
+    <div id="canvasContainer">
+        <canvas id="novussTable" width="600" height="600"></canvas>
     </div>
-</div>
 
-<div class="content">
-    <table>
-        <thead>
-            <tr>
-                <th>Latvian</th>
-                <th>Russian</th>
-            </tr>
-        </thead>
-        <tbody>
-            <tr>
-                <td class="latvian">Saimnieks Mārtiņš noliktavā rāda dažādu kultūrsēklas, ko drīzumā liks zemē.</td>
-                <td class="russian">Хозяин Мартиньш показывает на складе семена различных культур, которые вскоре будут посажены в землю.</td>
-            </tr>
-            <tr>
-                <td class="latvian">Kādreizējais rīdzinieks pirms aptuveni piecpadsmit gadiem ieradās Valmieras novada Kauguru pagastā un uzreiz orientējās uz ekoloģisko ražošanu.</td>
-                <td class="russian">Бывший рижанин около пятнадцати лет назад приехал в Каугурскую волость Валмиерского края и сразу ориентировался на экологическое производство.</td>
-            </tr>
-            <tr>
-                <td class="latvian">Šobrīd no trīssimt hektāru plašiem laukiem iegūtā produkcija pārsvarā tiek eksportēta.</td>
-                <td class="russian">На данный момент продукция, полученная с полей площадью триста гектаров, в основном идет на экспорт.</td>
-            </tr>
-            <tr>
-                <td class="latvian">Pagājušajā gadā galvenie bija zirņi un griķi. Tur ir kaut kādi no katras virs simts tonnām tīru sēklu.</td>
-                <td class="russian">В прошлом году основными были горох и гречиха. Там каждой культуры было более ста тонн чистых семян.</td>
-            </tr>
-            <tr>
-                <td class="latvian">Man visi lauki ir tikai sēklu audzēšanai. Es esmu specializējies uz to.</td>
-                <td class="russian">Все мои поля предназначены только для выращивания семян. Я специализируюсь на этом.</td>
-            </tr>
-            <tr>
-                <td class="latvian">Un, un aiziet arī principā eksportā viss, jo Latvijas sēklu tirgus ir principā apstājies.</td>
-                <td class="russian">И, в принципе, всё уходит на экспорт, потому что латвийский рынок семян практически остановился.</td>
-            </tr>
-            <tr>
-                <td class="latvian">Griķi aiziet uz Lietuvu, tālāk var iet uz Vāciju. Pagājušajā gadā gāja uz Itāliju griķi.</td>
-                <td class="russian">Гречиха идет в Литву, дальше может идти в Германию. В прошлом году гречиха шла в Италию.</td>
-            </tr>
-            <tr>
-                <td class="latvian">Savukārt Gunārs dzīvo Madonas novadā un kopš divtūkstoš vienpadsmitā gada nodarbojas ar bioloģisko gaļas liellopu audzēšanu.</td>
-                <td class="russian">В свою очередь Гунарс живет в Мадонском крае и с две тысячи одиннадцатого года занимается биологическим разведением мясного крупного рогатого скота.</td>
-            </tr>
-            <tr>
-                <td class="latvian">Šobrīd saimniecībā mīt aptuveni sešsimt liellopu.</td>
-                <td class="russian">Сейчас в хозяйстве обитает около шестисот голов скота.</td>
-            </tr>
-            <tr>
-                <td class="latvian">Mūsu galvenie klienti ir mājsaimniecības tepat Latvijā.</td>
-                <td class="russian">Наши главные клиенты — это домашние хозяйства здесь же в Латвии.</td>
-            </tr>
-            <tr>
-                <td class="latvian">Mēs esam mēģinājuši arī strādāt ar restorāniem, bet restorāniem ir tā specifika, ka viņi vēlas tādus konkrētus griezumus.</td>
-                <td class="russian">Мы также пробовали работать с ресторанами, но у ресторанов есть своя специфика: они хотят конкретные виды разделки.</td>
-            </tr>
-            <tr>
-                <td class="latvian">Bet mums ir mērķis pārdot nu visu, visu, visu, ko no dzīvnieka var iegūt.</td>
-                <td class="russian">А у нас цель — продать ну всё, всё, всё, что можно получить от животного.</td>
-            </tr>
-            <tr>
-                <td class="latvian">Strādājam pie eksporta plāniem. Esam izveidojuši arī zīmolu eksportam. Šobrīd esam uzsākuši pirmos soļus Vācijas tirgū.</td>
-                <td class="russian">Работаем над планами экспорта. Создали также бренд для экспорта. Сейчас сделали первые шаги на немецком рынке.</td>
-            </tr>
-            <tr>
-                <td class="latvian">Ja divtūkstoš divdesmit pirmajā gadā nozarē bija vairāk nekā četri tūkstoši bioloģiskās lauksaimniecības produktu ražotāju, tad turpmākajos gados bija kritums.</td>
-                <td class="russian">Если в две тысячи двадцать первом году в отрасли было более четырех тысяч производителей биологической сельхозпродукции, то в последующие годы был спад.</td>
-            </tr>
-            <tr>
-                <td class="latvian">Tagad tendence ir atkal augoša, īpaši bioloģiskās zemes platību ziņā, kas divtūkstoš divdesmit piektajā gadā pārsniedza trīssimt divdesmit septiņus tūkstošus hektāru.</td>
-                <td class="russian">Сейчас тенденция снова растущая, особенно в плане площадей биологических земель, которые в две тысячи двадцать пятом году превысили триста двадцать семь тысяч гектаров.</td>
-            </tr>
-            <tr>
-                <td class="latvian">Lauksaimnieki arī meklē iespējas, kā samazināt atkarību no ārējiem resursiem.</td>
-                <td class="russian">Фермеры также ищут возможности снизить зависимость от внешних ресурсов.</td>
-            </tr>
-            <tr>
-                <td class="latvian">Bioloģiskās metodes ir tieši tas, kas to šo brīvību nosacīto sniedz, jo nav jāpērk ne pesticīdi, ne ķīmiskie minerālmēsli.</td>
-                <td class="russian">Биологические методы — это именно то, что дает эту условную свободу, так как не нужно покупать ни пестициды, ни химические минеральные удобрения.</td>
-            </tr>
-            <tr>
-                <td class="latvian">Līdz ar to lauksaimnieki var strādāt vairāk koncentrējoties uz saimniecības iekšējiem cikliem un mazāk samazinot atkarību no ārējiem resursiem.</td>
-                <td class="russian">Благодаря этому фермеры могут работать, больше концентрируясь на внутренних циклах хозяйства и меньше завися от внешних ресурсов.</td>
-            </tr>
-            <tr>
-                <td class="latvian">Šogad es esmu dzirdējis arī lielas saimniecības nāk klāt uz bioloģisko tieši, jo ja viņi paskatās uz bioloģisko, tad izskatās, ka mums drusku labāk iet nekā konvencionāliem.</td>
-                <td class="russian">В этом году я слышал, что и крупные хозяйства переходят на биологическое, так как если они посмотрят на био-сектор, то кажется, что у нас дела идут чуть лучше, чем у конвенциональных (традиционных).</td>
-            </tr>
-            <tr>
-                <td class="latvian">Mums nav tie parādi par minerālmēsliem un pesticīdiem.</td>
-                <td class="russian">У нас нет тех долгов за минеральные удобрения и пестициды.</td>
-            </tr>
-            <tr>
-                <td class="latvian">Par liellopu gaļas nozari es varu teikt arī, kad lauksaimnieki ir diezgan optimistiski.</td>
-                <td class="russian">О секторе говядины я также могу сказать, что фермеры настроены довольно оптимистично.</td>
-            </tr>
-            <tr>
-                <td class="latvian">Gaļas cenas pēdējā laikā ir bijušas diezgan augstas un tagad arī saimniecības sāk domāt par tādu nozari kā liellopu nobarošana, par ko agrāk vispār nerunāja.</td>
-                <td class="russian">Цены на мясо в последнее время были довольно высокими, и сейчас хозяйства начинают задумываться о такой отрасли, как откорм скота, о чем раньше вообще не говорили.</td>
-            </tr>
-            <tr>
-                <td class="latvian">Tā kā ir jūtamas tādas tendences. Precīzi šīs nozares eksporta dati nav pieejami.</td>
-                <td class="russian">Так что такие тенденции ощущаются. Точные данные по экспорту этой отрасли недоступны.</td>
-            </tr>
-            <tr>
-                <td class="latvian">Tomēr lielākā daļa saimniecību eksportē graudus vai pārstrādātus produktus. Mērķis ir paplašināt šo jomu.</td>
-                <td class="russian">Тем не менее, большая часть хозяйств экспортирует зерно или переработанные продукты. Цель — расширить эту сферу.</td>
-            </tr>
-        </tbody>
-    </table>
-</div>
+    <div class="circle-panel-container">
+        <div class="panel-title">Штрафные позиции</div>
+        <div class="circle-interface">
+            <div class="dot-btn dot-center" title="Центр стола" onclick="setTargetPreset('center')"></div>
+            <div class="dot-btn dot-top" title="Круг (Верх)" onclick="setTargetPreset('circle-top')"></div>
+            <div class="dot-btn dot-bottom" title="Круг (Низ)" onclick="setTargetPreset('circle-bottom')"></div>
+            <div class="dot-btn dot-left" title="Круг (Лево)" onclick="setTargetPreset('circle-left')"></div>
+            <div class="dot-btn dot-right" title="Круг (Право)" onclick="setTargetPreset('circle-right')"></div>
+        </div>
+        <button class="btn-board" onclick="setTargetPreset('top-center')">🎯 Вернуть на борт</button>
+    </div>
 
+<script>
+const canvas = document.getElementById('novussTable');
+const ctx = canvas.getContext('2d');
+
+const canvasSize = canvas.width;
+const tableOuterMm = 1090; 
+const scale = canvasSize / tableOuterMm; 
+
+const borderThickness = 45 * scale; 
+const playSize = 1000 * scale; 
+
+const puckRadius = (30 / 2) * scale;     
+const strikerRadius = (45 / 2) * scale;  
+const strikerHoleRadius = (7 / 2) * scale; 
+
+const lineOffset = 130 * scale; 
+const centerCircleRadius = 125 * scale; 
+
+const lineLeftX = borderThickness + lineOffset;
+const lineRightX = canvasSize - borderThickness - lineOffset;
+const lineTopY = borderThickness + lineOffset;
+const homeLineY = canvasSize - borderThickness - lineOffset; 
+
+const strikerYPreset = homeLineY + strikerHoleRadius + (2 * scale);
+
+let striker = { x: canvasSize / 2, y: strikerYPreset, isDragging: false };
+let targetPuck = { x: canvasSize / 2, y: borderThickness + puckRadius, isDragging: false };
+
+const pocketOffset = borderThickness + (15 * scale) + (50 * scale); 
+const pockets = [
+    {x: pocketOffset, y: pocketOffset}, {x: canvasSize - pocketOffset, y: pocketOffset}, 
+    {x: pocketOffset, y: canvasSize - pocketOffset}, {x: canvasSize - pocketOffset, y: canvasSize - pocketOffset} 
+];
+
+let mouseX = canvasSize / 2; let mouseY = canvasSize / 2;
+
+// Функция для получения корректных координат с учетом масштаба канваса на экране
+function getRelativeCoords(e) {
+    const rect = canvas.getBoundingClientRect();
+    const scaleX = canvas.width / rect.width;
+    const scaleY = canvas.height / rect.height;
+    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+    return {
+        x: (clientX - rect.left) * scaleX,
+        y: (clientY - rect.top) * scaleY
+    };
+}
+
+canvas.addEventListener('mousedown', (e) => { const pos = getRelativeCoords(e); checkSelection(pos.x, pos.y); });
+canvas.addEventListener('mousemove', (e) => { const pos = getRelativeCoords(e); mouseX = pos.x; mouseY = pos.y; handleMove(pos.x, pos.y); });
+window.addEventListener('mouseup', onMouseUp);
+
+canvas.addEventListener('touchstart', (e) => { e.preventDefault(); const pos = getRelativeCoords(e); checkSelection(pos.x, pos.y); }, {passive: false});
+canvas.addEventListener('touchmove', (e) => { e.preventDefault(); const pos = getRelativeCoords(e); mouseX = pos.x; mouseY = pos.y; handleMove(pos.x, pos.y); }, {passive: false});
+window.addEventListener('touchend', onMouseUp);
+
+function checkSelection(x, y) {
+    const distToStriker = Math.hypot(x - striker.x, y - striker.y);
+    const distToTarget = Math.hypot(x - targetPuck.x, y - targetPuck.y);
+    if (distToTarget < puckRadius + 20) { targetPuck.isDragging = true; }
+    else if (distToStriker < strikerRadius + 20) { striker.isDragging = true; }
+}
+
+function handleMove(x, y) {
+    if (striker.isDragging) {
+        const minHoleVisibleX = lineLeftX + strikerHoleRadius;
+        const maxHoleVisibleX = lineRightX - strikerHoleRadius;
+        striker.x = Math.max(minHoleVisibleX, Math.min(maxHoleVisibleX, x));
+        
+        const minVisibleY = homeLineY + strikerHoleRadius; 
+        const maxY = canvasSize - borderThickness - strikerRadius;
+        striker.y = Math.max(minVisibleY, Math.min(maxY, y));
+    } else if (targetPuck.isDragging) {
+        targetPuck.x = Math.max(borderThickness + puckRadius, Math.min(canvasSize - borderThickness - puckRadius, x));
+        targetPuck.y = Math.max(borderThickness + puckRadius, Math.min(canvasSize - borderThickness - puckRadius, y));
+    }
+    draw();
+}
+
+function onMouseUp() {
+    striker.isDragging = false; targetPuck.isDragging = false;
+    draw();
+}
+
+function setTargetPreset(type) {
+    const center = canvasSize / 2;
+    if (type === 'top-center') {
+        targetPuck.x = center; targetPuck.y = borderThickness + puckRadius; 
+    } else if (type === 'center') {
+        targetPuck.x = center; targetPuck.y = center; 
+    } else if (type === 'circle-top') {
+        targetPuck.x = center; targetPuck.y = center - centerCircleRadius + puckRadius; 
+    } else if (type === 'circle-bottom') {
+        targetPuck.x = center; targetPuck.y = center + centerCircleRadius - puckRadius; 
+    } else if (type === 'circle-left') {
+        targetPuck.x = center - centerCircleRadius + puckRadius; targetPuck.y = center; 
+    } else if (type === 'circle-right') {
+        targetPuck.x = center + centerCircleRadius - puckRadius; targetPuck.y = center; 
+    }
+    draw();
+}
+
+function pxToCm(px) {
+    return (px / scale / 10).toFixed(1);
+}
+
+function drawArrowDimension(x1, y1, x2, y2, label, isVertical = false, color = '#e67e22') {
+    if (Math.abs(x1 - x2) < 1 && Math.abs(y1 - y2) < 1) return;
+    
+    ctx.save();
+    ctx.strokeStyle = color;
+    ctx.fillStyle = color;
+    ctx.lineWidth = 2;
+    
+    ctx.beginPath();
+    ctx.moveTo(x1, y1);
+    ctx.lineTo(x2, y2);
+    ctx.stroke();
+    
+    const drawArrowhead = (x, y, angle) => {
+        ctx.save();
+        ctx.translate(x, y);
+        ctx.rotate(angle);
+        ctx.beginPath();
+        ctx.moveTo(0, 0);
+        ctx.lineTo(-7, -4);
+        ctx.lineTo(-7, 4);
+        ctx.closePath();
+        ctx.fill();
+        ctx.restore();
+    };
+    
+    const angle = Math.atan2(y2 - y1, x2 - x1);
+    drawArrowhead(x1, y1, angle + Math.PI);
+    drawArrowhead(x2, y2, angle);
+    
+    ctx.strokeStyle = 'rgba(74, 85, 104, 0.6)';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    if (isVertical) {
+        ctx.moveTo(x1 - 5, y1); ctx.lineTo(x1 + 5, y1);
+        ctx.moveTo(x2 - 5, y2); ctx.lineTo(x2 + 5, y2);
+    } else {
+        ctx.moveTo(x1, y1 - 5); ctx.lineTo(x1, y1 + 5);
+        ctx.moveTo(x2, y2 - 5); ctx.lineTo(x2, y2 + 5);
+    }
+    ctx.stroke();
+    
+    ctx.fillStyle = '#d35400';
+    ctx.font = 'bold 13px monospace';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    
+    if (isVertical) {
+        ctx.save();
+        const textOffset = x1 < canvasSize / 2 ? 20 : -20;
+        ctx.translate(x1 + textOffset, (y1 + y2) / 2);
+        ctx.rotate(-Math.PI / 2);
+        ctx.fillStyle = '#d35400';
+        ctx.fillText(label + ' см', 0, 0);
+        ctx.restore();
+    } else {
+        let textY = y1 < canvasSize / 2 ? y1 + 14 : y1 - 14;
+        ctx.fillText(label + ' см', (x1 + x2) / 2, textY);
+    }
+    ctx.restore();
+}
+
+function drawPhantomStriker(x, y, alpha = 0.4) {
+    ctx.save();
+    ctx.fillStyle = `rgba(231, 76, 60, ${alpha})`;
+    ctx.beginPath(); ctx.arc(x, y, strikerRadius, 0, Math.PI * 2); ctx.fill();
+    ctx.strokeStyle = `rgba(192, 41, 43, ${alpha + 0.2})`; ctx.lineWidth = 1.5; ctx.stroke();
+    ctx.fillStyle = '#f3d9b1';
+    ctx.beginPath(); ctx.arc(x, y, strikerHoleRadius, 0, Math.PI * 2); ctx.fill();
+    ctx.stroke();
+    ctx.restore();
+}
+
+function draw() {
+    ctx.clearRect(0, 0, canvasSize, canvasSize);
+    ctx.fillStyle = '#f3d9b1'; ctx.fillRect(0, 0, canvasSize, canvasSize);
+    ctx.strokeStyle = '#4a5568'; ctx.lineWidth = 1;
+    
+    ctx.beginPath(); ctx.moveTo(borderThickness, lineTopY); ctx.lineTo(canvasSize - borderThickness, lineTopY); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(lineLeftX, borderThickness); ctx.lineTo(lineLeftX, canvasSize - borderThickness); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(lineRightX, borderThickness); ctx.lineTo(lineRightX, canvasSize - borderThickness); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(borderThickness, homeLineY); ctx.lineTo(canvasSize - borderThickness, homeLineY); ctx.stroke();
+
+    const centerX = canvasSize / 2;
+    const centerY = canvasSize / 2;
+    
+    ctx.beginPath(); ctx.arc(centerX, centerY, centerCircleRadius, 0, Math.PI * 2); ctx.stroke();
+    
+    ctx.strokeStyle = 'rgba(74, 85, 104, 0.25)';
+    ctx.beginPath(); ctx.moveTo(centerX, borderThickness); ctx.lineTo(centerX, canvasSize - borderThickness); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(borderThickness, centerY); ctx.lineTo(canvasSize-borderThickness, centerY); ctx.stroke();
+
+    ctx.fillStyle = '#1a1a1a';
+    pockets.forEach(p => { ctx.beginPath(); ctx.arc(p.x, p.y, 50 * scale, 0, Math.PI * 2); ctx.fill(); });
+
+    let rayIntersectionX = null;
+    let rayIntersectionY = null;
+    let hitWall = ''; 
+    let puckTrajectoryPoints = [];
+
+    if (!striker.isDragging && !targetPuck.isDragging) {
+        let currentX = striker.x; let currentY = striker.y;
+        let angle = Math.atan2(mouseY - striker.y, mouseX - striker.x);
+        let dirX = Math.cos(angle); let dirY = Math.sin(angle);
+        
+        ctx.lineWidth = 2; ctx.strokeStyle = '#e74c3c'; ctx.setLineDash([5, 5]); 
+        ctx.beginPath(); ctx.moveTo(currentX, currentY);
+        let phantomPositions = [];
+        
+        for (let bounce = 0; bounce < 3; bounce++) {
+            const minX = borderThickness + strikerRadius; const maxX = canvasSize - borderThickness - strikerRadius;
+            const minY = borderThickness + strikerRadius; const maxY = canvasSize - borderThickness - strikerRadius;
+            let tX = dirX > 0 ? (maxX - currentX) / dirX : (minX - currentX) / dirX;
+            let tY = dirY > 0 ? (maxY - currentY) / dirY : (minY - currentY) / dirY;
+            let t = Math.min(tX, tY);
+            
+            let toTargetX = targetPuck.x - currentX; let toTargetY = targetPuck.y - currentY;
+            let projection = toTargetX * dirX + toTargetY * dirY;
+            
+            if (projection > 0 && projection < t) {
+                let closestX = currentX + dirX * projection; let closestY = currentY + dirY * projection;
+                let distToTarget = Math.hypot(targetPuck.x - closestX, targetPuck.y - closestY);
+                if (distToTarget < (strikerRadius + puckRadius)) {
+                    t = projection - Math.sqrt(Math.pow(strikerRadius + puckRadius, 2) - Math.pow(distToTarget, 2));
+                    currentX += dirX * t; currentY += dirY * t;
+                    ctx.lineTo(currentX, currentY);
+                    phantomPositions.push({x: currentX, y: currentY});
+                    
+                    let pCurrX = targetPuck.x; let pCurrY = targetPuck.y;
+                    let pDirX = targetPuck.x - currentX; let pDirY = targetPuck.y - currentY;
+                    let pLen = Math.hypot(pDirX, pDirY);
+                    if(pLen > 0) { pDirX /= pLen; pDirY /= pLen; }
+                    puckTrajectoryPoints.push({x: pCurrX, y: pCurrY});
+                    
+                    for (let pBounce = 0; pBounce < 3; pBounce++) {
+                        const pMinX = borderThickness + puckRadius; const pMaxX = canvasSize - borderThickness - puckRadius;
+                        const pMinY = borderThickness + puckRadius; const pMaxY = canvasSize - borderThickness - puckRadius;
+                        let ptX = pDirX > 0 ? (pMaxX - pCurrX) / pDirX : (pMinX - pCurrX) / pDirX;
+                        let ptY = pDirY > 0 ? (pMaxY - pCurrY) / pDirY : (pMinY - pCurrY) / pDirY;
+                        let pt = Math.min(ptX, ptY);
+                        let pNextX = pCurrX + pDirX * pt; let pNextY = pCurrY + pDirY * pt;
+                        
+                        let pocketHit = null;
+                        for (let pocket of pockets) {
+                            let pToPocketX = pocket.x - pCurrX; let pToPocketY = pocket.y - pCurrY;
+                            let pProj = pToPocketX * pDirX + pToPocketY * pDirY;
+                            if (pProj > 0 && pProj < pt) {
+                                let pCloseX = pCurrX + pDirX * pProj; let pCloseY = pCurrY + pDirY * pProj;
+                                if (Math.hypot(pocket.x - pCloseX, pocket.y - pCloseY) < (50 * scale)) { pocketHit = pocket; break; }
+                            }
+                        }
+                        if (pocketHit) { puckTrajectoryPoints.push({x: pocketHit.x, y: pocketHit.y}); break; }
+                        pCurrX = pNextX; pCurrY = pNextY;
+                        puckTrajectoryPoints.push({x: pCurrX, y: pCurrY});
+                        if (Math.abs(pt - ptX) < 0.001) { pDirX = -pDirX; } else { pDirY = -pDirY; }
+                    }
+                    break; 
+                }
+            }
+            
+            let nextX = currentX + dirX * t; let nextY = currentY + dirY * t;
+            if (bounce === 0) {
+                if (Math.abs(t - tX) < 0.001) { hitWall = dirX > 0 ? 'right' : 'left'; rayIntersectionX = dirX > 0 ? canvasSize - borderThickness : borderThickness; let tToWall = (rayIntersectionX - currentX) / dirX; rayIntersectionY = currentY + dirY * tToWall; } 
+                else { hitWall = dirY > 0 ? 'bottom' : 'top'; rayIntersectionY = dirY > 0 ? canvasSize - borderThickness : borderThickness; let tToWall = (rayIntersectionY - currentY) / dirY; rayIntersectionX = currentX + dirX * tToWall; }
+            }
+            currentX = nextX; currentY = nextY;
+            ctx.lineTo(currentX, currentY);
+            phantomPositions.push({x: currentX, y: currentY});
+            if (Math.abs(t - tX) < 0.001) { dirX = -dirX; } else { dirY = -dirY; }
+        }
+        ctx.strokeStyle = '#e74c3c'; ctx.lineWidth = 2; ctx.stroke(); ctx.setLineDash([]); 
+        phantomPositions.forEach(pos => { drawPhantomStriker(pos.x, pos.y, 0.35); });
+    }
+
+    if (puckTrajectoryPoints.length > 0) {
+        ctx.save(); ctx.strokeStyle = '#2ecc71'; ctx.lineWidth = 3;
+        ctx.beginPath(); ctx.moveTo(puckTrajectoryPoints[0].x, puckTrajectoryPoints[0].y);
+        for(let i = 1; i < puckTrajectoryPoints.length; i++) { ctx.lineTo(puckTrajectoryPoints[i].x, puckTrajectoryPoints[i].y); }
+        ctx.stroke();
+        ctx.fillStyle = 'rgba(46, 204, 113, 0.25)'; ctx.strokeStyle = 'rgba(39, 174, 96, 0.5)'; ctx.lineWidth = 1.5;
+        for(let i = 1; i < puckTrajectoryPoints.length - 1; i++) { ctx.beginPath(); ctx.arc(puckTrajectoryPoints[i].x, puckTrajectoryPoints[i].y, puckRadius, 0, Math.PI * 2); ctx.fill(); ctx.stroke(); }
+        ctx.restore();
+    }
+
+    if (rayIntersectionX !== null && rayIntersectionY !== null) {
+        if (hitWall === 'top' || hitWall === 'bottom') {
+            let lines = [lineLeftX, centerX, lineRightX];
+            let closestLineX = lines.reduce((prev, curr) => Math.abs(curr - rayIntersectionX) < Math.abs(prev - rayIntersectionX) ? curr : prev);
+            let dimensionY = hitWall === 'top' ? borderThickness + 6 : canvasSize - borderThickness - 6;
+            drawArrowDimension(closestLineX, dimensionY, rayIntersectionX, dimensionY, pxToCm(Math.abs(rayIntersectionX - closestLineX)), false);
+            ctx.fillStyle = '#e67e22'; ctx.beginPath(); ctx.arc(rayIntersectionX, hitWall === 'top' ? borderThickness : canvasSize - borderThickness, 3, 0, Math.PI*2); ctx.fill();
+        } else if (hitWall === 'left' || hitWall === 'right') {
+            let lines = [lineTopY, centerY, homeLineY];
+            let closestLineY = lines.reduce((prev, curr) => Math.abs(curr - rayIntersectionY) < Math.abs(prev - rayIntersectionY) ? curr : prev);
+            let dimensionX = hitWall === 'left' ? borderThickness + 6 : canvasSize - borderThickness - 6;
+            drawArrowDimension(dimensionX, closestLineY, dimensionX, rayIntersectionY, pxToCm(Math.abs(rayIntersectionY - closestLineY)), true);
+            ctx.fillStyle = '#e67e22'; ctx.beginPath(); ctx.arc(hitWall === 'left' ? borderThickness : canvasSize - borderThickness, rayIntersectionY, 3, 0, Math.PI*2); ctx.fill();
+        }
+    }
+
+    ctx.fillStyle = '#5c3a21'; 
+    ctx.fillRect(0, 0, canvasSize, borderThickness); ctx.fillRect(0, canvasSize - borderThickness, canvasSize, borderThickness); 
+    ctx.fillRect(0, borderThickness, borderThickness, canvasSize - (borderThickness * 2)); ctx.fillRect(canvasSize - borderThickness, borderThickness, borderThickness, canvasSize - (borderThickness * 2)); 
+    ctx.fillStyle = '#fff';
+    for(let i = 1; i <= 3; i++) {
+        let pointPos = borderThickness + ((1000 * scale) / 4) * i;
+        ctx.beginPath(); ctx.arc(borderThickness/2, pointPos, 3, 0, Math.PI*2); ctx.fill(); ctx.beginPath(); ctx.arc(canvasSize - borderThickness/2, pointPos, 3, 0, Math.PI*2); ctx.fill();
+        ctx.beginPath(); ctx.arc(pointPos, borderThickness/2, 3, 0, Math.PI*2); ctx.fill(); ctx.beginPath(); ctx.arc(pointPos, canvasSize - borderThickness/2, 3, 0, Math.PI*2); ctx.fill();
+    }
+    ctx.fillStyle = '#2c3e50'; ctx.beginPath(); ctx.arc(targetPuck.x, targetPuck.y, puckRadius, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(targetPuck.x, targetPuck.y, 2.5, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = '#e74c3c'; ctx.beginPath(); ctx.arc(striker.x, striker.y, strikerRadius, 0, Math.PI * 2); ctx.fill();
+    ctx.strokeStyle = '#c0392b'; ctx.lineWidth = 2; ctx.stroke();
+    ctx.fillStyle = '#f3d9b1'; ctx.beginPath(); ctx.arc(striker.x, striker.y, strikerHoleRadius, 0, Math.PI * 2); ctx.fill();
+    ctx.strokeStyle = '#c0392b'; ctx.lineWidth = 1; ctx.stroke();
+}
+draw();
+</script>
 </body>
 </html>
